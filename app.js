@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 
 app.use('/', usersRouter);
 app.use('/', cardsRouter);
-app.use((req, res) => {
+app.use('/', (req, res) => {
   res.status(404).send({ message: 'Page is not found' });
 });
 

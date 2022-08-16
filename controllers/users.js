@@ -67,7 +67,7 @@ const updateUser = (req, res) => {
       throw new UserNotFound();
     })
     .then(user => {
-      if (name.length < 2 || name.length > 30) {
+      if (name.length < 2 || name.length > 30 || about.length < 2 || about.length > 30) {
         throw new ValidateError();
       }
       res.status(200).send(user);
@@ -79,6 +79,14 @@ const updateUser = (req, res) => {
       }
       else if (err.name === "ValidateError" && name.length > 30) {
         res.status(err.status).send({ message: "The name length must be less than 30 characters" });
+        return;
+      }
+      else if (err.name === "ValidateError" && about.length < 2) {
+        res.status(err.status).send({ message: "The about length must be more than 2 characters" });
+        return;
+      }
+      else if (err.name === "ValidateError" && about.length > 30) {
+        res.status(err.status).send({ message: "The about length must be less than 30 characters" });
         return;
       }
       else if (err.name === "ValidationError") {
@@ -97,7 +105,7 @@ const updateUser = (req, res) => {
 
 const updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar })
+  User.findByIdAndUpdate(req.user._id, {$set: { avatar: avatar }}, { new: true })
     .orFail(() => {
       throw new UserNotFound();
     })

@@ -1,8 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const path = require('path');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
+const {PageNotFound} = require('./errors/errors');
 
 const app = express();
 
@@ -24,6 +24,10 @@ app.use((req, res, next) => {
 
 app.use('/', usersRouter);
 app.use('/', cardsRouter);
+app.use('/', (req, res) => {
+ // res.status(404).send({message: "Страница не существует"});
+ //console.log('ОЛОЛО');
+});
 
 app.listen(PORT, () => {
   console.log(`App is running on port ${PORT}`);

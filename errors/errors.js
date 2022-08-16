@@ -21,10 +21,22 @@ class CardNotFound extends ApplicationError {
   }
 }
 
+class PageNotFound extends ApplicationError {
+  constructor() {
+    super(404, "User not found")
+  }
+}
+
 class NoAccessError extends ApplicationError {
   constructor() {
     super(403, "You can't delete a non-your card")
   }
 }
 
-module.exports = { UserNotFound, CardNotFound, NoAccessError }
+class ValidationError extends ApplicationError {
+  constructor() {
+    super(400, "Error validating data")
+  }
+}
+
+module.exports = { UserNotFound, CardNotFound, PageNotFound, NoAccessError, ValidationError }

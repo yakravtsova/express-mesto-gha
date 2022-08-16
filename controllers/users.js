@@ -5,19 +5,23 @@ const { UserNotFound, ValidationError } = require('../errors/errors');
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then(user => res.status(201).send(user))
+    .then(user => {
+      if (err.name === "ValidationError") {
+        res.status(err.status).send({ message: err.message });
+        return;
+      }
+      else if (name.length < 2 || name.length > 30 || !(name && about && avatar)) {
+        throw new ValidationError();
+      }
+      res.status(201).send(user)})
     .catch(err => {
-      if (name.length < 2) {
-        res.status(400).send({message: "The name length must be more than 2 characters"});
+      if (err.name === "ValidationError" && name.length < 2) {
+        res.status(err.status).send({ message: "The name length must be more than 2 characters" });
         return;
       }
-      else if (name.length > 30) {
-        res.status(400).send({message: "The name length must be less than 30 characters"});
+      else if (err.name === "ValidationError" && name.length > 30) {
+        res.status(err.status).send({ message: "The name length must be less than 30 characters" });
         return;
-      }
-      else if (err.name === "ValidationError") {
-        res.status(400).send({ message: "Error validating data" });
-        return
       }
       else {
         res.status(500).send({ message: "Error creating user" })
@@ -85,7 +89,7 @@ const updateUser = (req, res) => {
         return;
       }
       else if (err.name === "ValidationError") {
-        res.status(400).send({ message: "Error validating data" });
+        res.status(err.status).send({ message: err.message });
         return;
       }
       else if (err.name === "UserNotFound") {

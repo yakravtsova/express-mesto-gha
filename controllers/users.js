@@ -1,28 +1,21 @@
 const User = require('../models/user');
 const mongoose = require('mongoose');
-const { UserNotFound, ValidationError } = require('../errors/errors');
+const { UserNotFound, ValidateError } = require('../errors/errors');
 
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
     .then(user => {
-      if (err.name === "ValidationError") {
-        res.status(err.status).send({ message: err.message });
-        return;
-      }
-      else if (name.length < 2 || name.length > 30 || !(name && about && avatar)) {
-        throw new ValidationError();
-      }
       res.status(201).send(user)})
     .catch(err => {
-      if (err.name === "ValidationError" && name.length < 2) {
-        res.status(err.status).send({ message: "The name length must be more than 2 characters" });
+      if (err.name === "ValidationError"/* && name.length < 2*/) {
+        res.status(400).send({ message: "Validating error" });
         return;
-      }
+      }/*
       else if (err.name === "ValidationError" && name.length > 30) {
         res.status(err.status).send({ message: "The name length must be less than 30 characters" });
         return;
-      }
+      }*/
       else {
         res.status(500).send({ message: "Error creating user" })
       }
@@ -75,16 +68,16 @@ const updateUser = (req, res) => {
     })
     .then(user => {
       if (name.length < 2 || name.length > 30) {
-        throw new ValidationError();
+        throw new ValidateError();
       }
       res.status(200).send(user);
     })
     .catch(err => {
-      if (err.name === "ValidationError" && name.length < 2) {
+      if (err.name === "ValidateError" && name.length < 2) {
         res.status(err.status).send({ message: "The name length must be more than 2 characters" });
         return;
       }
-      else if (err.name === "ValidationError" && name.length > 30) {
+      else if (err.name === "ValidateError" && name.length > 30) {
         res.status(err.status).send({ message: "The name length must be less than 30 characters" });
         return;
       }

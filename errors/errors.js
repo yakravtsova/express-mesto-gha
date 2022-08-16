@@ -33,10 +33,10 @@ class NoAccessError extends ApplicationError {
   }
 }
 
-class ValidationError extends ApplicationError {
+class ValidateError extends ApplicationError {
   constructor() {
     super(400, "Error validating data")
   }
 }
 
-module.exports = { UserNotFound, CardNotFound, PageNotFound, NoAccessError, ValidationError }
+module.exports = { UserNotFound, CardNotFound, PageNotFound, NoAccessError, ValidateError }

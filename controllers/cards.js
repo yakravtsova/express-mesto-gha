@@ -29,13 +29,18 @@ const deleteCard = (req, res) => {
       }
       return card.remove();
     })
-    .then(card => res.status(200).send(card))
+    .then(card => {
+      res.status(200).send(card)})
     .catch(err => {
       if (err.name === "NoAccessError") {
         res.status(err.status).send({message: err.message})
       }
       else if (err.name === "CardNotFound") {
         res.status(err.status).send({message: err.message})
+      }
+      else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
+        res.status(400).send({ message: "Error validating data" });
+        return;
       }
       else {
         res.status(500).send({ message: "Internal error" })

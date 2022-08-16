@@ -87,6 +87,7 @@ const dislikeCard = (req, res) => {
     .orFail(() => {
       throw new CardNotFound();
     })
+    .then(card => res.status(200).send(card))
     .catch(err => {
       if (err.name === "CardNotFound") {
         res.status(err.status).send(err.message)

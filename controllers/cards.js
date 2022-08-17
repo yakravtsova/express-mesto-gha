@@ -46,7 +46,7 @@ const getCards = (req, res) => {
     .then((cards) => res.status(200).send(cards))
     .catch((err) => {
       if (err.name === 'CardNotFound') {
-        res.status(err.status).send(err.message);
+        res.status(err.status).send({ message: err.message });
       } else {
         res.status(500).send({ message: 'Internal error' });
       }

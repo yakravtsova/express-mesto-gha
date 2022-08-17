@@ -19,29 +19,24 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Card.findById(req.params.cardId)
+  Card.findByIdAndRemove(req.params.cardId)
     .orFail(() => {
       throw new CardNotFound();
     })
-    .then(card => {
+   /* .then(card => {
       if (card.owner != req.user._id) {
         throw new NoAccessError();
       }
       return card.remove();
-    })
+    })*/
     .then(card => {
       res.status(200).send(card)
     })
-    .then(card => {
-      if (Card.findById(req.params.cardId)) {
-        throw ApplicationError();
-      }
-    })
     .catch(err => {
-      if (err.name === "NoAccessError") {
+      /*if (err.name === "NoAccessError") {
         res.status(err.status).send({ message: err.message })
       }
-      else if (err.name === "CardNotFound") {
+      else*/ if (err.name === "CardNotFound") {
         res.status(err.status).send({ message: err.message })
       }
       else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {

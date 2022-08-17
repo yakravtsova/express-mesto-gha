@@ -82,11 +82,11 @@ const updateUser = (req, res) => {
         return;
       }
       else if (err.name === "ValidateError" && about.length < 2) {
-        res.status(err.status).send({ message: "The about length must be more than 2 characters" });
+        res.status(400).send({ message: "The about length must be more than 2 characters" });
         return;
       }
       else if (err.name === "ValidateError" && about.length > 30) {
-        res.status(err.status).send({ message: "The about length must be less than 30 characters" });
+        res.status(400).send({ message: "The about length must be less than 30 characters" });
         return;
       }
       else if (err.name === "ValidationError") {

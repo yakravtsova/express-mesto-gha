@@ -39,4 +39,4 @@ class ValidateError extends ApplicationError {
   }
 }
 
-module.exports = { UserNotFound, CardNotFound, PageNotFound, NoAccessError, ValidateError }
+module.exports = { ApplicationError, UserNotFound, CardNotFound, PageNotFound, NoAccessError, ValidateError }

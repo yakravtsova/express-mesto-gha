@@ -1,7 +1,7 @@
 const Card = require('../models/card');
 const mongoose = require('mongoose');
 
-const { CardNotFound, NoAccessError } = require('../errors/errors');
+const { ApplicationError, CardNotFound, NoAccessError } = require('../errors/errors');
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
@@ -30,17 +30,26 @@ const deleteCard = (req, res) => {
       return card.remove();
     })
     .then(card => {
-      res.status(200).send(card)})
+      res.status(200).send(card)
+    })
+    .then(card => {
+      if (Card.findById(req.params.cardId)) {
+        throw ApplicationError();
+      }
+    })
     .catch(err => {
       if (err.name === "NoAccessError") {
-        res.status(err.status).send({message: err.message})
+        res.status(err.status).send({ message: err.message })
       }
       else if (err.name === "CardNotFound") {
-        res.status(err.status).send({message: err.message})
+        res.status(err.status).send({ message: err.message })
       }
       else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
         res.status(400).send({ message: "Error validating data" });
         return;
+      }
+      else if (err.name === "ApplicationError") {
+        res.status(err.status).send({ message: err.message });
       }
       else {
         res.status(500).send({ message: "Internal error" })
@@ -76,7 +85,7 @@ const likeCard = (req, res) => {
     .then(card => res.status(200).send(card))
     .catch(err => {
       if (err.name === "CardNotFound") {
-        res.status(err.status).send({message: err.message})
+        res.status(err.status).send({ message: err.message })
       }
       else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
         res.status(400).send({ message: "Error validating data" });
@@ -100,7 +109,7 @@ const dislikeCard = (req, res) => {
     .then(card => res.status(200).send(card))
     .catch(err => {
       if (err.name === "CardNotFound") {
-        res.status(err.status).send({message: err.message})
+        res.status(err.status).send({ message: err.message })
       }
       else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
         res.status(400).send({ message: "Error validating data" });

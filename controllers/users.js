@@ -1,19 +1,30 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+const SALT_ROUNDS = 10;
 const User = require('../models/user');
 const { UserNotFound } = require('../errors/UserNotFound');
 
 const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => {
-      res.status(201).send(user);
-    })
+  const {
+    email, password, name, about, avatar,
+  } = req.body;
+  if (!email || !password) {
+    return res.status(400).send({ message: 'Email и пароль не могут быть пустыми' });
+  }
+  bcrypt.hash(password, SALT_ROUNDS)
+    .then((hash) => User.create({
+      email, password: hash, name, about, avatar,
+    }))
+    .then(() => res.status(201).send({ message: 'Пользователь успешно создан' }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Validating error' });
-      } else {
-        res.status(500).send({ message: 'Error creating user' });
+      if (err.code === 11000) {
+        return res.status(409).send({ message: 'Пользователь с таким email уже существует!' });
       }
+      if (err.name === 'ValidationError') {
+        return res.status(400).send({ message: 'Validating error' });
+      }
+      return res.status(500).send({ message: 'Error creating user' });
     });
 };
 

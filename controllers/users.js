@@ -1,7 +1,9 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const SALT_ROUNDS = 10;
+const JWT_SECRET = 'verysecretjwtsecret';
 const User = require('../models/user');
 const { UserNotFound } = require('../errors/UserNotFound');
 
@@ -25,6 +27,21 @@ const createUser = (req, res) => {
         return res.status(400).send({ message: 'Validating error' });
       }
       return res.status(500).send({ message: 'Error creating user' });
+    });
+};
+
+const loginUser = (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).send({ message: 'Email или пароль не могут быть пустыми!' });
+  }
+  User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+      res.status(200).send({ token });
+    })
+    .catch((err) => {
+      res.status(500).send({ message: err.message });
     });
 };
 
@@ -114,5 +131,5 @@ const updateAvatar = (req, res) => {
 };
 
 module.exports = {
-  createUser, getUser, getUsers, updateUser, updateAvatar,
+  createUser, loginUser, getUser, getUsers, updateUser, updateAvatar,
 };

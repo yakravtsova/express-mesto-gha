@@ -24,8 +24,7 @@ const deleteCard = (req, res) => {
       throw new CardNotFound();
     })
     .then((card) => {
-      console.log(`${card.owner}  ${req.user._id}`);
-      if (card.owner !== req.user._id) {
+      if (card.owner != req.user._id) {
         throw new ForbiddenError();
       }
       return card.remove();

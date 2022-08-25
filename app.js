@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const { errors } = require('celebrate');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
 
@@ -26,6 +27,8 @@ app.use('/', cardsRouter);
 app.use('/', (req, res) => {
   res.status(404).send({ message: 'Page is not found' });
 });
+
+app.use(errors());
 
 app.listen(PORT, () => {
   console.log(`App is running on port ${PORT}`);

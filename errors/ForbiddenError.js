@@ -1,8 +1,7 @@
-const { ApplicationError } = require('./ApplicationError');
-
-class ForbiddenError extends ApplicationError {
-  constructor() {
-    super(403, 'You can not delete not yours cards');
+class ForbiddenError extends Error {
+  constructor(message) {
+    super(message);
+    this.statusCode = 403;
   }
 }
 

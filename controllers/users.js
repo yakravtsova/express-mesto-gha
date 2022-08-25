@@ -18,7 +18,9 @@ const createUser = (req, res) => {
     .then((hash) => User.create({
       email, password: hash, name, about, avatar,
     }))
-    .then(() => res.status(201).send({ message: 'Пользователь успешно создан' }))
+    .then((user) => res.status(201).send({
+      email: user.email, name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
+    }))
     .catch((err) => {
       if (err.code === 11000) {
         return res.status(409).send({ message: 'Пользователь с таким email уже существует!' });
@@ -41,8 +43,8 @@ const loginUser = (req, res) => {
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
-      })
-        .end();
+      });
+      res.status(200).send({ token });
     })
     .catch((err) => {
       res.status(500).send({ message: err.message });

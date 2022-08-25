@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Card = require('../models/card');
 
 const { CardNotFound } = require('../errors/CardNotFound');
+const { ForbiddenError } = require('../errors/ForbiddenError');
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
@@ -18,9 +19,16 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .orFail(() => {
       throw new CardNotFound();
+    })
+    .then((card) => {
+      console.log(`${card.owner}  ${req.user._id}`);
+      if (card.owner !== req.user._id) {
+        throw new ForbiddenError();
+      }
+      return card.remove();
     })
     .then((card) => {
       res.status(200).send(card);
@@ -30,6 +38,8 @@ const deleteCard = (req, res) => {
         res.status(err.status).send({ message: err.message });
       } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
         res.status(400).send({ message: 'Error validating data' });
+      } else if (err.name === 'ForbiddenError') {
+        res.status(err.status).send({ message: err.message });
       } else if (err.name === 'ApplicationError') {
         res.status(err.status).send({ message: err.message });
       } else {

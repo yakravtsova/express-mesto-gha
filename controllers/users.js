@@ -81,7 +81,23 @@ const getUser = (req, res) => {
     });
 };
 
+const getCurrentUser = (req, res) => {
+  User.findById(req.user._id)
+    .orFail(() => {
+      throw new UserNotFound();
+    })
+    .then((user) => res.status(200).send(user))
+    .catch((err) => {
+      if (err.name === 'UserNotFound') {
+        res.status(err.status).send({ message: err.message });
+      } else {
+        res.status(500).send({ message: 'Error getting user' });
+      }
+    });
+};
+
 const updateUser = (req, res) => {
+  console.log('upd');
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -92,21 +108,10 @@ const updateUser = (req, res) => {
       throw new UserNotFound();
     })
     .then((user) => {
-      /* if (name.length < 2 || name.length > 30 || about.length < 2 || about.length > 30) {
-        throw new ValidateError();
-      } */
       res.status(200).send(user);
     })
     .catch((err) => {
-      /* if (err.name === 'ValidateError' && name.length < 2) {
-        res.status(err.status).send({ message: 'The name length must be more than 2 characters' });
-      } else if (err.name === 'ValidateError' && name.length > 30) {
-        res.status(err.status).send({ message: 'The name length must be less than 30 characters' });
-      } else if (err.name === 'ValidateError' && about.length < 2) {
-        res.status(400).send({ message: 'The about length must be more than 2 characters' });
-      } else if (err.name === 'ValidateError' && about.length > 30) {
-        res.status(400).send({ message: 'The about length must be less than 30 characters' });
-      } else */ if (err.name === 'ValidationError') {
+      if (err.name === 'ValidationError') {
         res.status(400).send({ message: 'Validation error' });
       } else if (err.name === 'UserNotFound') {
         res.status(err.status).send(err.message);
@@ -135,5 +140,5 @@ const updateAvatar = (req, res) => {
 };
 
 module.exports = {
-  createUser, loginUser, getUser, getUsers, updateUser, updateAvatar,
+  createUser, loginUser, getUser, getCurrentUser, getUsers, updateUser, updateAvatar,
 };

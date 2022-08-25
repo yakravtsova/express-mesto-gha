@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const SALT_ROUNDS = 10;
-const JWT_SECRET = 'verysecretjwtsecret';
+const JWT_SECRET = 'verysecretjwtkey';
 const User = require('../models/user');
 const { UserNotFound } = require('../errors/UserNotFound');
 
@@ -38,7 +38,11 @@ const loginUser = (req, res) => {
   User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
-      res.status(200).send({ token });
+      res.cookie('jwt', token, {
+        maxAge: 3600000 * 24 * 7,
+        httpOnly: true,
+      })
+        .end();
     })
     .catch((err) => {
       res.status(500).send({ message: err.message });

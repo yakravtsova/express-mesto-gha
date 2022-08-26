@@ -23,8 +23,8 @@ const deleteCard = (req, res, next) => {
       throw new NotFoundError('Карточка не найдена');
     })
     .then((card) => {
-      const cardOwner = card.owner;
-      const userId = req.user._id;
+      const cardOwner = card.owner.toString();
+      const userId = req.user._id.toString();
       if (cardOwner !== userId) {
         throw new ForbiddenError('Вы можете удалять только свои карточки');
       }

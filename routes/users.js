@@ -27,7 +27,16 @@ router.post('/users/signin', celebrate({
 router.get('/users', auth, getUsers);
 router.get('/users/me', auth, getCurrentUser);
 router.get('/users/:userId', auth, getUser);
-router.patch('/users/me', auth, updateUser);
-router.patch('/users/me/avatar', auth, updateAvatar);
+router.patch('/users/me', auth, celebrate({
+  body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+  }),
+}), updateUser);
+router.patch('/users/me/avatar', auth, celebrate({
+  body: Joi.object().keys({
+    avatar: Joi.string().regex(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/),
+  }),
+}), updateAvatar);
 
 module.exports = router;

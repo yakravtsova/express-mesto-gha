@@ -5,15 +5,15 @@ const jwt = require('jsonwebtoken');
 const SALT_ROUNDS = 10;
 const JWT_SECRET = 'verysecretjwtkey';
 const User = require('../models/user');
-const { UserNotFound } = require('../errors/UserNotFound');
+const { NotFoundError } = require('../errors/NotFoundError');
+// const { ApplicationError } = require('../errors/ApplicationError');
+const { ValidationError } = require('../errors/ValidationError');
+const { UnauthorizedError } = require('../errors/UnauthorizedError');
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     email, password, name, about, avatar,
   } = req.body;
-  if (!email || !password) {
-    return res.status(400).send({ message: 'Email и пароль не могут быть пустыми' });
-  }
   bcrypt.hash(password, SALT_ROUNDS)
     .then((hash) => User.create({
       email, password: hash, name, about, avatar,
@@ -21,22 +21,11 @@ const createUser = (req, res) => {
     .then((user) => res.status(201).send({
       email: user.email, name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
     }))
-    .catch((err) => {
-      if (err.code === 11000) {
-        return res.status(409).send({ message: 'Пользователь с таким email уже существует!' });
-      }
-      if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Validating error' });
-      }
-      return res.status(500).send({ message: 'Error creating user' });
-    });
+    .catch(next);
 };
 
-const loginUser = (req, res) => {
+const loginUser = (req, res, next) => {
   const { email, password } = req.body;
-  if (!email || !password) {
-    return res.status(400).send({ message: 'Email или пароль не могут быть пустыми!' });
-  }
   User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
@@ -46,60 +35,41 @@ const loginUser = (req, res) => {
       });
       res.status(200).send({ token });
     })
-    .catch((err) => {
-      res.status(500).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .orFail(() => {
-      throw new UserNotFound();
+      throw new NotFoundError('Пользователи не найдены');
     })
     .then((users) => res.status(200).send(users))
-    .catch((err) => {
-      if (err.name === 'UserNotFound') {
-        res.status(err.status).send(err.message);
-      } else {
-        res.status(500).send({ message: 'Error getting user' });
-      }
-    });
+    .catch(next);
 };
 
-const getUser = (req, res) => {
-  User.findById(req.params.userId)
+const getUser = (req, res, next) => {
+  const { userId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new ValidationError('Некорректный идентификатор пользователя');
+  }
+  User.findById(userId)
     .orFail(() => {
-      throw new UserNotFound();
+      throw new NotFoundError('Пользователь не найден');
     })
     .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'UserNotFound') {
-        res.status(err.status).send({ message: err.message });
-      } else if (!mongoose.Types.ObjectId.isValid(req.params.userId)) {
-        res.status(400).send({ message: 'Error validating data' });
-      } else {
-        res.status(500).send({ message: 'Error getting user' });
-      }
-    });
+    .catch(next);
 };
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .orFail(() => {
-      throw new UserNotFound();
+      throw new NotFoundError('Пользователь не найден');
     })
     .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'UserNotFound') {
-        res.status(err.status).send({ message: err.message });
-      } else {
-        res.status(500).send({ message: 'Error getting user' });
-      }
-    });
+    .catch(next);
 };
 
-const updateUser = (req, res) => {
-  console.log('upd');
+const updateUser = (req, res, next) => {
   const { name, about } = req.body;
   User.findByIdAndUpdate(
     req.user._id,
@@ -107,38 +77,22 @@ const updateUser = (req, res) => {
     { new: true, runValidators: true },
   )
     .orFail(() => {
-      throw new UserNotFound();
+      throw new NotFoundError('Пользователь не найден');
     })
     .then((user) => {
       res.status(200).send(user);
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Validation error' });
-      } else if (err.name === 'UserNotFound') {
-        res.status(err.status).send(err.message);
-      } else {
-        res.status(500).send({ message: 'Error updating user' });
-      }
-    });
+    .catch(next);
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { $set: { avatar } }, { new: true })
     .orFail(() => {
-      throw new UserNotFound();
+      throw new NotFoundError('Пользователь не найден');
     })
     .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Error validating data' });
-      } else if (err.name === 'UserNotFound') {
-        res.status(err.status).send(err.message);
-      } else {
-        res.status(500).send({ message: 'Error updating avatar' });
-      }
-    });
+    .catch(next);
 };
 
 module.exports = {

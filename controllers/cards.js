@@ -1,107 +1,80 @@
 const mongoose = require('mongoose');
 const Card = require('../models/card');
 
-const { CardNotFound } = require('../errors/CardNotFound');
+const { NotFoundError } = require('../errors/NotFoundError');
 const { ForbiddenError } = require('../errors/ForbiddenError');
+const { ValidationError } = require('../errors/ValidationError');
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
   Card.create({ name, link, owner })
     .then((card) => res.status(201).send(card))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Error validating data' });
-      } else {
-        res.status(500).send({ message: 'Internal error' });
-      }
-    });
+    .catch(next);
 };
 
-const deleteCard = (req, res) => {
-  Card.findById(req.params.cardId)
+const deleteCard = (req, res, next) => {
+  const { cardId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(cardId)) {
+    throw new ValidationError('Некорректный идентификатор карточки');
+  }
+  Card.findById(cardId)
     .orFail(() => {
-      throw new CardNotFound();
+      throw new NotFoundError('Карточка не найдена');
     })
     .then((card) => {
       if (card.owner != req.user._id) {
-        throw new ForbiddenError();
+        throw new ForbiddenError('Вы можете удалять только свои карточки');
       }
       return card.remove();
     })
     .then((card) => {
       res.status(200).send(card);
     })
-    .catch((err) => {
-      if (err.name === 'CardNotFound') {
-        res.status(err.status).send({ message: err.message });
-      } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-        res.status(400).send({ message: 'Error validating data' });
-      } else if (err.name === 'ForbiddenError') {
-        res.status(err.status).send({ message: err.message });
-      } else if (err.name === 'ApplicationError') {
-        res.status(err.status).send({ message: err.message });
-      } else {
-        res.status(500).send({ message: 'Internal error' });
-      }
-    });
+    .catch(next);
 };
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .orFail(() => {
-      throw new CardNotFound();
+      throw new NotFoundError('Карточки не найдены');
     })
     .then((cards) => res.status(200).send(cards))
-    .catch((err) => {
-      if (err.name === 'CardNotFound') {
-        res.status(err.status).send({ message: err.message });
-      } else {
-        res.status(500).send({ message: 'Internal error' });
-      }
-    });
+    .catch(next);
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
+  const { cardId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(cardId)) {
+    throw new ValidationError('Некорректный идентификатор карточки');
+  }
   Card.findByIdAndUpdate(
-    req.params.cardId,
+    cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true },
   )
     .orFail(() => {
-      throw new CardNotFound();
+      throw new NotFoundError('Карточка не найдена');
     })
     .then((card) => res.status(200).send(card))
-    .catch((err) => {
-      if (err.name === 'CardNotFound') {
-        res.status(err.status).send({ message: err.message });
-      } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-        res.status(400).send({ message: 'Error validating data' });
-      } else {
-        res.status(500).send({ message: 'Internal error' });
-      }
-    });
+    .catch(next);
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
+  const { cardId } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(cardId)) {
+    throw new ValidationError('Некорректный идентификатор карточки');
+  }
   Card.findByIdAndUpdate(
-    req.params.cardId,
+    cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true },
   )
     .orFail(() => {
-      throw new CardNotFound();
+      throw new NotFoundError('Карточка не найдена');
     })
     .then((card) => res.status(200).send(card))
-    .catch((err) => {
-      if (err.name === 'CardNotFound') {
-        res.status(err.status).send({ message: err.message });
-      } else if (!mongoose.Types.ObjectId.isValid(req.params.cardId)) {
-        res.status(400).send({ message: 'Error validating data' });
-      } else {
-        res.status(500).send({ message: 'Internal error' });
-      }
-    });
+    .catch(next);
 };
 
 module.exports = {

@@ -14,14 +14,6 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use(express.json());
 app.use(cookieParser());
 
-/* app.use((req, res, next) => {
-  req.user = {
-    _id: '62f6bc001bb256ef290f550e',
-  };
-
-  next();
-}); */
-
 app.use('/', usersRouter);
 app.use('/', cardsRouter);
 app.use('/', (req, res) => {
@@ -29,6 +21,14 @@ app.use('/', (req, res) => {
 });
 
 app.use(errors());
+
+app.use((err, req, res, next) => {
+  if (err.code === 11000) {
+    return res.status(409).send({ message: 'Пользователь с таким email уже существует!' });
+  }
+  res.status(err.statusCode).send({ message: err.message });
+  next();
+});
 
 app.listen(PORT, () => {
   console.log(`App is running on port ${PORT}`);

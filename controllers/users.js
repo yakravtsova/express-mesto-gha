@@ -6,9 +6,7 @@ const SALT_ROUNDS = 10;
 const JWT_SECRET = 'verysecretjwtkey';
 const User = require('../models/user');
 const { NotFoundError } = require('../errors/NotFoundError');
-// const { ApplicationError } = require('../errors/ApplicationError');
 const { ValidationError } = require('../errors/ValidationError');
-const { UnauthorizedError } = require('../errors/UnauthorizedError');
 
 const createUser = (req, res, next) => {
   const {

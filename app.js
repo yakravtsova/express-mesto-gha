@@ -18,8 +18,8 @@ app.use(cookieParser());
 
 app.use('/', usersRouter);
 app.use('/', cardsRouter);
-app.use('/', auth, () => {
-  throw new NotFoundError('Страница не найдена');
+app.use('/', auth, (req, res, next) => {
+  next(new NotFoundError('Страница не найдена'));
 });
 
 app.use(errors());

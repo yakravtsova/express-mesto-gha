@@ -34,7 +34,7 @@ const loginUser = (req, res, next) => {
         sameSite: true,
       })
         .status(200)
-        .end();
+        .send({ message: 'Авторизация прошла успешно' });
     })
     .catch(next);
 };

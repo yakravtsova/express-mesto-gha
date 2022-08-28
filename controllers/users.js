@@ -30,10 +30,10 @@ const loginUser = (req, res, next) => {
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
+        sameSite: true,
       })
         .status(200)
-        .end();
-      // .send({ token });
+        .send({ data: user.toJSON() });
     })
     .catch(next);
 };

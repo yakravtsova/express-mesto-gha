@@ -27,12 +27,16 @@ const loginUser = (req, res, next) => {
   User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
+      /* console.log(token);
+        res.set('Authorization', `Bearer ${token}`);
+      res.send({ token }); */
       res.cookie('jwt', token, {
         maxAge: 3600000 * 24 * 7,
         httpOnly: true,
         sameSite: true,
       })
-        .status(200);
+        .status(200)
+        .end();
     })
     .catch(next);
 };

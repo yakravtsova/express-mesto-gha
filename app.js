@@ -5,6 +5,8 @@ const { errors } = require('celebrate');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
 const { NotFoundError } = require('./errors/NotFoundError');
+const { createUser, loginUser } = require('./controllers/users');
+const { signUpValidators, signInValidators } = require('./utils/validators');
 const auth = require('./middlewares/auth');
 
 const app = express();
@@ -16,9 +18,14 @@ mongoose.connect('mongodb://localhost:27017/mestodb');
 app.use(express.json());
 app.use(cookieParser());
 
+app.post('/users/signup', signUpValidators, createUser);
+app.post('/users/signin', signInValidators, loginUser);
+
+app.use(auth);
+
 app.use('/', usersRouter);
 app.use('/', cardsRouter);
-app.use('/', auth, (req, res, next) => {
+app.use('/', (req, res, next) => {
   next(new NotFoundError('Страница не найдена'));
 });
 

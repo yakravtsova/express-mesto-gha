@@ -32,8 +32,7 @@ const loginUser = (req, res, next) => {
         httpOnly: true,
         sameSite: true,
       })
-        .status(200)
-        .send({ data: user.toJSON() });
+        .status(200);
     })
     .catch(next);
 };

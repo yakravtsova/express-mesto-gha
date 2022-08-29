@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -6,7 +5,8 @@ const SALT_ROUNDS = 10;
 const JWT_SECRET = 'verysecretjwtkey';
 const User = require('../models/user');
 const { NotFoundError } = require('../errors/NotFoundError');
-const { ValidationError } = require('../errors/ValidationError');
+const { BadRequestError } = require('../errors/BadRequestError');
+const { ConflictError } = require('../errors/ConflictError');
 
 const createUser = (req, res, next) => {
   const {
@@ -19,7 +19,17 @@ const createUser = (req, res, next) => {
     .then((user) => res.status(201).send({
       email: user.email, name: user.name, about: user.about, avatar: user.avatar, _id: user._id,
     }))
-    .catch(next);
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким email уже существует!'));
+        // res.status(409).send({ message: 'Пользователь с таким email уже существует!' });
+      }
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные для создания пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const loginUser = (req, res, next) => {
@@ -41,18 +51,12 @@ const loginUser = (req, res, next) => {
 
 const getUsers = (req, res, next) => {
   User.find({})
-    .orFail(() => {
-      throw new NotFoundError('Пользователи не найдены');
-    })
     .then((users) => res.status(200).send(users))
     .catch(next);
 };
 
 const getUser = (req, res, next) => {
   const { userId } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    throw new ValidationError('Некорректный идентификатор пользователя');
-  }
   User.findById(userId)
     .orFail(() => {
       throw new NotFoundError('Пользователь не найден');
@@ -83,7 +87,13 @@ const updateUser = (req, res, next) => {
     .then((user) => {
       res.status(200).send(user);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные для создания пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const updateAvatar = (req, res, next) => {
@@ -93,7 +103,13 @@ const updateAvatar = (req, res, next) => {
       throw new NotFoundError('Пользователь не найден');
     })
     .then((user) => res.status(200).send(user))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные для создания пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports = {

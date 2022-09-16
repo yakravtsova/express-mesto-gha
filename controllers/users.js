@@ -1,8 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const SALT_ROUNDS = 10;
-const JWT_SECRET = 'verysecretjwtkey';
+// const SALT_ROUNDS = 10;
+// const JWT_SECRET = 'verysecretjwtkey';
+const { JWT_SECRET, SALT_ROUNDS = 10 } = process.env;
 const User = require('../models/user');
 const { NotFoundError } = require('../errors/NotFoundError');
 const { BadRequestError } = require('../errors/BadRequestError');
